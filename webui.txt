@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>🎙️ TTS 服务终极测试页面 (v3.0 - Vue3重构版)</title>
+  <style>
+    :root {
+      --primary-color: #4f46e5;
+      --success-color: #22c55e;
+      --error-color: #ef4444;
+      --warning-color: #f59e0b;
+      --light-gray: #f8fafc;
+      --gray: #64748b;
+      --border-color: #e2e8f0;
+      --text-color: #1e293b;
+      --mint-start: #f0fdfa;
+      --mint-middle: #e6fffa;
+      --mint-end: #fdf2f8;
+      --mint-accent: #6ee7b7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      padding: 0;
+      margin: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, var(--mint-start) 0%, var(--mint-middle) 50%, var(--mint-end) 100%);
+      min-height: 100vh;
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+    }
+
+    [v-cloak] {
+      display: none;
+    }
+
+    .app-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 2rem 0 2rem;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--text-color);
+      margin-bottom: 2rem;
+      font-weight: 700;
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, var(--primary-color), var(--mint-accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-color);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      background-color: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .textarea-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--gray);
+      margin-top: 0.5rem;
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      cursor: pointer;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .clear-btn:hover {
+      background-color: rgba(79, 70, 229, 0.1);
+    }
+
+    .label-with-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .pause-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pause-input {
+      width: 6.5em;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .pause-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+    }
+
+    .btn-insert-pause {
+      background: linear-gradient(135deg, var(--mint-accent), #10b981);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-insert-pause:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-insert-pause:active {
+      transform: scale(0.95);
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .slider-group input[type="range"] {
+      flex-grow: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border-color);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .slider-group input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      cursor: pointer;
+    }
+
+    .slider-group input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      cursor: pointer;
+      border: none;
+    }
+
+    .slider-group span {
+      font-weight: 500;
+      min-width: 50px;
+      text-align: right;
+      color: var(--primary-color);
+      font-size: 0.9rem;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    button {
+      padding: 0.9rem 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .btn-generate {
+      background: linear-gradient(135deg, var(--gray), #475569);
+      color: white;
+    }
+
+    .btn-stream {
+      background: linear-gradient(135deg, var(--success-color), #16a34a);
+      color: white;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .status {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 500;
+      display: none;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status-info {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+      border: 1px solid #93c5fd;
+    }
+
+    .status-success {
+      background-color: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
+    .status-error {
+      background-color: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 1.5rem;
+      border-radius: 8px;
+    }
+
+    .download-section {
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .btn-download {
+      background: linear-gradient(135deg, var(--warning-color), #d97706);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-download:active {
+      transform: scale(0.97);
+    }
+
+    details {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      background-color: rgba(248, 250, 252, 0.8);
+    }
+
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-color);
+      padding: 0.5rem 0;
+    }
+
+    summary:hover {
+      color: var(--primary-color);
+    }
+
+    .checkbox-grid {
+      margin-top: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.8rem;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      body {
+        padding: 0.5rem;
+      }
+
+      .app-container {
+        padding: 0 0 1rem;
+      }
+
+      .container {
+        padding: 1.5rem;
+        border-radius: 12px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .grid-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .button-group {
+        grid-template-columns: 1fr;
+      }
+
+      .checkbox-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .slider-group span {
+        min-width: 45px;
+        font-size: 0.85rem;
+      }
+
+      textarea {
+        min-height: 100px;
+      }
+
+      .label-with-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .pause-controls {
+        align-self: flex-end;
+      }
+
+      .pause-input {
+        font-size: 0.85rem;
+      }
+
+      .btn-insert-pause {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.7rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem;
+        margin: 0.5rem;
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      input[type="text"],
+      input[type="password"],
+      select,
+      textarea {
+        padding: 0.7rem;
+        font-size: 16px;
+        /* 防止iOS缩放 */
+      }
+
+      .slider-group {
+        gap: 0.5rem;
+      }
+    }
+
+    /* 加载动画 */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="app-container">
+    <main class="container">
+      <h1 v-cloak>{{ title }}</h1>
+
+      <details>
+        <summary>API 配置</summary>
+        <div class="form-group" style="margin-top: 1rem">
+          <label for="baseUrl">API Base URL</label>
+          <input type="text" id="baseUrl" v-model="config.baseUrl" @input="saveConfig" placeholder="https://你的域名" />
+        </div>
+        <div class="form-group" style="margin-bottom: 0">
+          <label for="apiKey">API Key</label>
+          <input type="password" id="apiKey" v-model="config.apiKey" @input="saveConfig" placeholder="你的密钥" />
+        </div>
+      </details>
+
+      <div class="form-group">
+        <div class="label-with-controls">
+          <label for="inputText">输入文本</label>
+          <div class="pause-controls">
+            <input type="number" v-model.number="pauseTime" min="0.01" max="100" step="0.01" placeholder="停顿时长"
+              class="pause-input" />
+            <button type="button" @click="insertPause" class="btn-insert-pause" title="在光标位置插入停顿">
+              插入停顿
+            </button>
+          </div>
+        </div>
+        <textarea id="inputText" ref="textareaRef" v-model="form.inputText" @input="saveForm"
+          placeholder="请在这里输入文本，目前尽可能不要超过1点5万字每次，不然会报错。音色映射可以自行修改workers的配置"></textarea>
+        <div class="textarea-footer">
+          <span v-cloak>{{ charCount }} 字符</span>
+          <button class="clear-btn" @click="clearText">清除</button>
+        </div>
+      </div>
+
+      <div class="grid-layout">
+        <div class="form-group">
+          <label for="voice">选择音色 (Model)</label>
+          <select id="voice" v-model="form.voice" @change="saveForm">
+            <option value="zh-CN-XiaoxiaoNeural">中文女声 (晓晓)</option>
+            <option value="zh-CN-YunxiNeural">中文男声 (云希)</option>
+            <option value="zh-CN-YunyangNeural">中文男声 (云扬)</option>
+            <option value="zh-CN-XiaoyiNeural">中文女声 (晓伊)</option>
+            <option value="zh-CN-YunjianNeural">中文男声 (云健)</option>
+            <option value="zh-CN-XiaochenNeural">中文女声 (晓辰)</option>
+            <option value="zh-CN-XiaohanNeural">中文女声 (晓涵)</option>
+            <option value="zh-CN-XiaomengNeural">中文女声 (晓梦)</option>
+            <option value="zh-CN-XiaomoNeural">中文女声 (晓墨)</option>
+            <option value="zh-CN-XiaoqiuNeural">中文女声 (晓秋)</option>
+            <option value="zh-CN-XiaoruiNeural">中文女声 (晓睿)</option>
+            <option value="zh-CN-XiaoshuangNeural">中文女声 (晓双)</option>
+            <option value="zh-CN-XiaoxuanNeural">中文女声 (晓萱)</option>
+            <option value="zh-CN-XiaoyanNeural">中文女声 (晓颜)</option>
+            <option value="zh-CN-XiaoyouNeural">中文女声 (晓悠)</option>
+            <option value="zh-CN-XiaozhenNeural">中文女声 (晓甄)</option>
+            <option value="zh-CN-YunfengNeural">中文男声 (云枫)</option>
+            <option value="zh-CN-YunhaoNeural">中文男声 (云皓)</option>
+            <option value="zh-CN-YunxiaNeural">中文男声 (云夏)</option>
+            <option value="zh-CN-YunyeNeural">中文男声 (云野)</option>
+            <option value="zh-CN-YunzeNeural">中文男声 (云泽)</option>
+            <option value="en-US-JennyNeural">英文女声 (Jenny)</option>
+            <option value="en-US-GuyNeural">英文男声 (Guy)</option>
+            <option value="en-US-AriaNeural">英文女声 (Aria)</option>
+            <option value="en-US-DavisNeural">英文男声 (Davis)</option>
+            <option value="en-US-AmberNeural">英文女声 (Amber)</option>
+            <option value="en-US-AnaNeural">英文女声 (Ana)</option>
+            <option value="en-US-AshleyNeural">英文女声 (Ashley)</option>
+            <option value="en-US-BrandonNeural">英文男声 (Brandon)</option>
+            <option value="en-US-ChristopherNeural">英文男声 (Christopher)</option>
+            <option value="en-US-CoraNeural">英文女声 (Cora)</option>
+            <option value="en-US-ElizabethNeural">英文女声 (Elizabeth)</option>
+            <option value="en-US-EricNeural">英文男声 (Eric)</option>
+            <option value="en-US-JacobNeural">英文男声 (Jacob)</option>
+            <option value="en-US-JaneNeural">英文女声 (Jane)</option>
+            <option value="en-US-JasonNeural">英文男声 (Jason)</option>
+            <option value="en-US-MichelleNeural">英文女声 (Michelle)</option>
+            <option value="en-US-MonicaNeural">英文女声 (Monica)</option>
+            <option value="en-US-NancyNeural">英文女声 (Nancy)</option>
+            <option value="en-US-RogerNeural">英文男声 (Roger)</option>
+            <option value="en-US-SaraNeural">英文女声 (Sara)</option>
+            <option value="en-US-SteffanNeural">英文男声 (Steffan)</option>
+            <option value="en-US-TonyNeural">英文男声 (Tony)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>语速</label>
+          <div class="slider-group">
+            <input type="range" v-model.number="form.speed" @input="saveForm" min="0.25" max="2.0" step="0.05" />
+            <span v-cloak>{{ speedDisplay }}</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>音调</label>
+          <div class="slider-group">
+            <input type="range" v-model.number="form.pitch" @input="saveForm" min="0.5" max="1.5" step="0.05" />
+            <span v-cloak>{{ pitchDisplay }}</span>
+          </div>
+        </div>
+      </div>
+
+      <details>
+        <summary>高级文本清理选项</summary>
+        <div class="checkbox-grid">
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="form.cleaning.removeMarkdown" @change="saveForm" />
+            移除 Markdown
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="form.cleaning.removeEmoji" @change="saveForm" />
+            移除 Emoji
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="form.cleaning.removeUrls" @change="saveForm" />
+            移除 URL
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="form.cleaning.removeLineBreaks" @change="saveForm" />
+            移除所有空白/换行
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="form.cleaning.removeCitation" @change="saveForm" />
+            移除引用标记数字
+          </label>
+        </div>
+        <div class="form-group" style="margin-top: 1rem; margin-bottom: 0">
+          <label for="customKeywords">自定义移除关键词 (逗号分隔)</label>
+          <input type="text" id="customKeywords" v-model="form.cleaning.customKeywords" @input="saveForm"
+            placeholder="例如: ABC,XYZ" />
+        </div>
+      </details>
+
+      <div class="button-group">
+        <button class="btn-generate" v-cloak :disabled="isLoading" @click="generateSpeech(false)">
+          <span v-if="isLoading && !isStreaming" class="loading"></span>
+          {{ isLoading && !isStreaming ? '生成中...' : '生成语音 (标准)' }}
+        </button>
+        <button class="btn-stream" v-cloak :disabled="isLoading" @click="generateSpeech(true)">
+          <span v-if="isLoading && isStreaming" class="loading"></span>
+          {{ isLoading && isStreaming ? '流式播放中...' : '生成语音 (流式)' }}
+        </button>
+      </div>
+
+      <div class="status" :class="['status-' + status.type, { show: status.show }]" v-cloak>
+        {{ status.message }}
+      </div>
+
+      <audio ref="audioPlayer" controls v-show="audioSrc" v-cloak :src="audioSrc" @loadstart="onAudioLoadStart"
+        @canplay="onAudioCanPlay"></audio>
+
+      <!-- 下载按钮 -->
+      <div v-if="showDownloadBtn" class="download-section" v-cloak>
+        <button class="btn-download" @click="downloadAudio">
+          <span>📥</span> 下载音频文件
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          title: 'TTS 服务终极测试页面 (v3.0 - Vue3重构版)',
+          isLoading: false,
+          isStreaming: false,
+          audioSrc: '',
+          downloadUrl: '', // 添加下载链接
+          showDownloadBtn: false, // 控制下载按钮显示
+          pauseTime: 1.0, // 停顿时间
+          config: {
+            baseUrl: 'https://你的域名',
+            apiKey: '你的密钥'
+          },
+          form: {
+            inputText: '请在这里输入文本，目前尽可能不要超过1点5万字每次，不然会报错。音色映射可以自行修改workers的配置',
+            voice: 'zh-CN-XiaoxiaoNeural',
+            speed: 1.0,
+            pitch: 1.0,
+            cleaning: {
+              removeMarkdown: true,
+              removeEmoji: true,
+              removeUrls: true,
+              removeLineBreaks: true,
+              removeCitation: true,
+              customKeywords: ''
+            }
+          },
+          status: {
+            show: false,
+            message: '',
+            type: 'info'
+          }
+        }
+      },
+      computed: {
+        charCount() {
+          return this.form.inputText.length;
+        },
+        speedDisplay() {
+          return this.form.speed.toFixed(2);
+        },
+        pitchDisplay() {
+          return this.form.pitch.toFixed(2);
+        }
+      },
+      methods: {
+        loadConfig() {
+          try {
+            const saved = localStorage.getItem('tts_config');
+            if (saved) {
+              this.config = { ...this.config, ...JSON.parse(saved) };
+              if (this.config.baseUrl.endsWith('/')) {
+                this.config.baseUrl = this.config.baseUrl.slice(0, -1); // 去除末尾的斜杠
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to load config from localStorage:', e);
+          }
+        },
+        saveConfig() {
+          try {
+            localStorage.setItem('tts_config', JSON.stringify(this.config));
+          } catch (e) {
+            console.warn('Failed to save config to localStorage:', e);
+          }
+        },
+        loadForm() {
+          try {
+            const saved = localStorage.getItem('tts_form');
+            if (saved) {
+              this.form = { ...this.form, ...JSON.parse(saved) };
+            }
+          } catch (e) {
+            console.warn('Failed to load form from localStorage:', e);
+          }
+        },
+        saveForm() {
+          try {
+            localStorage.setItem('tts_form', JSON.stringify(this.form));
+          } catch (e) {
+            console.warn('Failed to save form to localStorage:', e);
+          }
+        },
+        clearText() {
+          this.form.inputText = '';
+          this.saveForm();
+        },
+        downloadAudio() {
+          if (this.downloadUrl) {
+            const link = document.createElement('a');
+            link.href = this.downloadUrl;
+            let timeString = (new Date().toLocaleString() + '-').replace(/[\/\:]/g, '-').replace(/\s/g, '_').replace(/[-_](\d)[-_]/g, '-0$1-').slice(0, -1);
+            link.download = 'tts-audio-' + timeString + '.mp3';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+        },
+        updateStatus(message, type = 'info') {
+          this.status = {
+            show: true,
+            message,
+            type
+          };
+        },
+        hideStatus() {
+          this.status.show = false;
+        },
+        getRequestBody() {
+          return {
+            voice: this.form.voice,
+            input: this.form.inputText.trim(),
+            speed: this.form.speed,
+            pitch: this.form.pitch,
+            cleaning_options: {
+              remove_markdown: this.form.cleaning.removeMarkdown,
+              remove_emoji: this.form.cleaning.removeEmoji,
+              remove_urls: this.form.cleaning.removeUrls,
+              remove_line_breaks: this.form.cleaning.removeLineBreaks,
+              remove_citation_numbers: this.form.cleaning.removeCitation,
+              custom_keywords: this.form.cleaning.customKeywords,
+            },
+          };
+        },
+        async generateSpeech(isStream) {
+          const baseUrl = this.config.baseUrl.trim(); // 去除末尾的斜杠
+          const apiKey = this.config.apiKey.trim();
+          const text = this.form.inputText.trim();
+
+          if (!baseUrl || !apiKey || !text) {
+            this.updateStatus('请填写 API 配置和输入文本', 'error');
+            return;
+          }
+
+          const requestBody = this.getRequestBody();
+          requestBody.stream = isStream;
+
+          this.isLoading = true;
+          this.isStreaming = isStream;
+          this.audioSrc = '';
+          this.showDownloadBtn = false; // 重置下载按钮状态
+          if (this.downloadUrl) {
+            URL.revokeObjectURL(this.downloadUrl); // 清理之前的下载链接
+            this.downloadUrl = '';
+          }
+          this.updateStatus('正在连接服务器...', 'info');
+
+          try {
+            if (isStream) {
+              await this.playStreamWithMSE(baseUrl, apiKey, requestBody);
+            } else {
+              await this.playStandard(baseUrl, apiKey, requestBody);
+            }
+          } catch (error) {
+            console.error('Error generating speech:', error);
+            this.updateStatus('错误: ' + error.message, 'error');
+          } finally {
+            this.isLoading = false;
+            this.isStreaming = false;
+          }
+        },
+        async playStandard(baseUrl, apiKey, body) {
+          const response = await fetch(baseUrl + '/v1/audio/speech', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + apiKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              errorData.error?.message ||
+              'HTTP error! status: ' + response.status
+            );
+          }
+
+          const blob = await response.blob();
+          this.audioSrc = URL.createObjectURL(blob);
+          this.downloadUrl = this.audioSrc; // 非流式模式直接使用相同的URL
+          this.showDownloadBtn = true;
+          this.updateStatus('播放中...', 'success');
+
+          // 自动播放
+          this.$nextTick(() => {
+            this.$refs.audioPlayer.play().catch(e =>
+              console.warn('Autoplay was prevented:', e)
+            );
+          });
+        },
+        async playStreamWithMSE(baseUrl, apiKey, body) {
+          const mediaSource = new MediaSource();
+          this.audioSrc = URL.createObjectURL(mediaSource);
+
+          // 用于收集音频数据的数组
+          const audioChunks = [];
+
+          return new Promise((resolve, reject) => {
+            mediaSource.addEventListener('sourceopen', async () => {
+              URL.revokeObjectURL(this.audioSrc);
+              const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+
+              try {
+                const response = await fetch(baseUrl + '/v1/audio/speech', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': 'Bearer ' + apiKey,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(body),
+                });
+
+                if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(
+                    errorData.error?.message ||
+                    'HTTP error! status: ' + response.status
+                  );
+                }
+
+                this.updateStatus('已连接，接收数据中...', 'info');
+
+                // 自动播放
+                this.$nextTick(() => {
+                  this.$refs.audioPlayer.play().catch(e =>
+                    console.warn('Autoplay was prevented:', e)
+                  );
+                });
+
+                const reader = response.body.getReader();
+
+                const pump = async () => {
+                  const { done, value } = await reader.read();
+
+                  if (done) {
+                    if (mediaSource.readyState === 'open' && !sourceBuffer.updating) {
+                      mediaSource.endOfStream();
+                    }
+
+                    // 创建完整的音频文件用于下载
+                    const completeAudioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
+                    this.downloadUrl = URL.createObjectURL(completeAudioBlob);
+                    this.showDownloadBtn = true;
+
+                    this.updateStatus('播放完毕！可点击下载按钮保存音频', 'success');
+                    resolve();
+                    return;
+                  }
+
+                  // 收集音频数据块
+                  audioChunks.push(value.slice()); // 使用slice()创建副本
+
+                  if (sourceBuffer.updating) {
+                    await new Promise(resolve =>
+                      sourceBuffer.addEventListener('updateend', resolve, { once: true })
+                    );
+                  }
+
+                  sourceBuffer.appendBuffer(value);
+                  this.updateStatus('正在流式播放...', 'success');
+                };
+
+                sourceBuffer.addEventListener('updateend', pump);
+                await pump();
+              } catch (error) {
+                console.error('Error in MSE streaming:', error);
+                this.updateStatus('错误: ' + error.message, 'error');
+                if (mediaSource.readyState === 'open') {
+                  try {
+                    mediaSource.endOfStream();
+                  } catch (e) { }
+                }
+                reject(error);
+              }
+            }, { once: true });
+          });
+        },
+        onAudioLoadStart() {
+          console.log('Audio loading started');
+        },
+        onAudioCanPlay() {
+          console.log('Audio can play');
+        },
+        // 插入停顿标签
+        insertPause() {
+          const textarea = this.$refs.textareaRef;
+          if (!textarea) return;
+          if (!this.pauseTime || this.pauseTime <= 0 || this.pauseTime > 100) {
+            window.alert('停顿时间必须在 0.01 到 100 秒之间', 'error');
+            return;
+          }
+
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const breakTag = '<break time="' + this.pauseTime + 's"/>';
+
+          const newText = this.form.inputText.slice(0, start) +
+            breakTag +
+            this.form.inputText.slice(end);
+
+          this.form.inputText = newText;
+
+          // 保持光标位置
+          this.$nextTick(() => {
+            const newPos = start + breakTag.length;
+            textarea.focus();
+            textarea.setSelectionRange(newPos, newPos);
+          });
+        }
+      },
+      mounted() {
+        this.loadConfig();
+        this.loadForm();
+      },
+      beforeUnmount() {
+        // 清理URL对象，避免内存泄漏
+        if (this.audioSrc) {
+          URL.revokeObjectURL(this.audioSrc);
+        }
+        if (this.downloadUrl && this.downloadUrl !== this.audioSrc) {
+          URL.revokeObjectURL(this.downloadUrl);
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+
+</html>
