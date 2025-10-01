@@ -180,4 +180,5 @@ curl --location 'https://<YOUR_WORKER_URL>/v1/audio/speech' \
 - **`workers.js`**: 核心服务逻辑。包含了 API 路由、认证、文本清理、自我调节机制、以及与微软 TTS 服务的交互。这是您需要部署到 Cloudflare 的唯一文件。
 - **`webui.html`**: 一个独立的、功能强大的 HTML 测试页面。它无需任何服务器，可以直接在本地用浏览器打开。它封装了所有 API 参数，并提供了一个直观的界面来与您的 Worker 服务进行交互。
 
+[![Powered by DartNode](https://dartnode.com/branding/DN-Open-Source-sm.png)](https://dartnode.com "Powered by DartNode - Free VPS for Open Source")
 ---
