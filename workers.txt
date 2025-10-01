@@ -150,7 +150,7 @@ async function handleSpeechRequest(request) {
   const modelVoice = !voice ? OPENAI_VOICE_MAP[model.replace('tts-1-', '')] : null;
   const finalVoice = modelVoice || voice;
   if (!finalVoice) {
-    return errorResponse("无效的语音模型", 400, "invalid_request_error");
+    return errorResponse("无效语音模型", 400, "invalid_request_error");
   }
 
   // 参数转换为 Microsoft TTS 格式
