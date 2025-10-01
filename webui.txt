@@ -972,7 +972,7 @@
         this.loadForm();
       },
       beforeUnmount() {
-        // 清理URL对象，避免内存泄漏
+        // 清理URL对象，避免内存泄漏漏
         if (this.audioSrc) {
           URL.revokeObjectURL(this.audioSrc);
         }
